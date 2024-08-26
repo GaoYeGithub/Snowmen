@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Snowman</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        function createSnowman() {
+            const snowman = new THREE.Group();
+
+            const bottomGeometry = new THREE.SphereGeometry(1.5, 32, 32);
+            const snowMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff });
+            const bottomSphere = new THREE.Mesh(bottomGeometry, snowMaterial);
+            snowman.add(bottomSphere);
+
+            const scarfGeometry = new THREE.TorusGeometry(0.8, 0.2, 16, 100, Math.PI * 1.4);
+            const scarfMaterial = new THREE.MeshPhongMaterial({ color: 0xff0000 });
+            const scarf = new THREE.Mesh(scarfGeometry, scarfMaterial);
+            scarf.position.set(0, 3, 0);
+            scarf.rotation.x = Math.PI / 2;
+            scarf.rotation.y = Math.PI / 8;
+            snowman.add(scarf);
+
+            const scarfEndGeometry = new THREE.BoxGeometry(0.8, 0.2, 1);
+            const scarfEnd = new THREE.Mesh(scarfEndGeometry, scarfMaterial);
+            scarfEnd.position.set(0.5, 2.6, 0.7);
+            scarfEnd.rotation.x = Math.PI / 4;
+            scarfEnd.rotation.y = Math.PI / 8;
+            snowman.add(scarfEnd);
+            
+            const middleGeometry = new THREE.SphereGeometry(1, 32, 32);
+            const middleSphere = new THREE.Mesh(middleGeometry, snowMaterial);
+            middleSphere.position.y = 2;
+            snowman.add(middleSphere);
+
+            const topGeometry = new THREE.SphereGeometry(0.75, 32, 32);
+            const topSphere = new THREE.Mesh(topGeometry, snowMaterial);
+            topSphere.position.y = 3.5;
+            snowman.add(topSphere);
+
+            const eyeGeometry = new THREE.SphereGeometry(0.1, 32, 32);
+            const eyeMaterial = new THREE.MeshPhongMaterial({ color: 0x000000 });
+            const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            leftEye.position.set(0.3, 3.7, 0.65);
+            const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            rightEye.position.set(-0.3, 3.7, 0.65);
+            snowman.add(leftEye, rightEye);
+
+            const mouthGeometry = new THREE.TorusGeometry(0.2, 0.05, 16, 32, Math.PI);
+            const mouthMaterial = new THREE.MeshPhongMaterial({ color: 0x000000 });
+            const mouth = new THREE.Mesh(mouthGeometry, mouthMaterial);
+            mouth.position.set(0, 3.3, 0.65);
+            mouth.rotation.x = Math.PI / 2;
+            snowman.add(mouth);
+
+            const buttonGeometry = new THREE.SphereGeometry(0.08, 32, 32);
+            const buttonMaterial = new THREE.MeshPhongMaterial({ color: 0x000000 });
+            for (let i = 0; i < 3; i++) {
+                const button = new THREE.Mesh(buttonGeometry, buttonMaterial);
+                button.position.set(0, 2.3 - i * 0.3, 0.9);
+                snowman.add(button);
+            }
+
+            const stickGeometry = new THREE.CylinderGeometry(0.05, 0.05, 1, 32);
+            const stickMaterial = new THREE.MeshPhongMaterial({ color: 0x8B4513 });
+            const leftHand = new THREE.Group();
+            const leftStick = new THREE.Mesh(stickGeometry, stickMaterial);
+            leftStick.position.set(0, -0.5, 0);
+            leftHand.add(leftStick);
+            leftHand.position.set(1.2, 2, 0);
+            leftHand.rotation.z = Math.PI / 4;
+
+            const rightHand = new THREE.Group();
+            const rightStick = new THREE.Mesh(stickGeometry, stickMaterial);
+            rightStick.position.set(0, -0.5, 0);
+            rightHand.add(rightStick);
+            rightHand.position.set(-1.2, 2, 0);
+            rightHand.rotation.z = -Math.PI / 4;
+
+            snowman.add(leftHand, rightHand);
+
+            const hatBaseGeometry = new THREE.CylinderGeometry(0.8, 0.8, 0.1, 32);
+            const hatTopGeometry = new THREE.CylinderGeometry(0.6, 0.6, 0.5, 32);
+            const hatMaterial = new THREE.MeshPhongMaterial({ color: 0x000000 });
+            const hatBase = new THREE.Mesh(hatBaseGeometry, hatMaterial);
+            hatBase.position.y = 4.2;
+            const hatTop = new THREE.Mesh(hatTopGeometry, hatMaterial);
+            hatTop.position.y = 4.5;
+            snowman.add(hatBase, hatTop);
+
+            snowman.position.y = -1.5;
+
+            return snowman;
+        }
+
+        const snowman = createSnowman();
+        scene.add(snowman);
+
+        const platformGeometry = new THREE.CylinderGeometry(5, 5, 0.5, 32);
+        const platformMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff });
+        const platform = new THREE.Mesh(platformGeometry, platformMaterial);
+        platform.position.y = -2.25;
+        scene.add(platform);
+
+        const snowParticles = new THREE.Group();
+        const snowGeometry = new THREE.SphereGeometry(0.02, 8, 8);
+        const snowMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff });
+
+        for (let i = 0; i < 1000; i++) {
+            const snowflake = new THREE.Mesh(snowGeometry, snowMaterial);
+            snowflake.position.set(
+                (Math.random() - 0.5) * 20,
+                Math.random() * 20,
+                (Math.random() - 0.5) * 20
+            );
+            snowParticles.add(snowflake);
+        }
+
+        scene.add(snowParticles);
+
+        const ambientLight = new THREE.AmbientLight(0x404040);
+        scene.add(ambientLight);
+        const pointLight = new THREE.PointLight(0xffffff, 1, 100);
+        pointLight.position.set(10, 10, 10);
+        scene.add(pointLight);
+
+        camera.position.z = 7;
+        camera.position.y = 2;
+
+        function animate() {
+            requestAnimationFrame(animate);
+            snowParticles.children.forEach(snowflake => {
+                snowflake.position.y -= 0.02;
+                if (snowflake.position.y < -10) {
+                    snowflake.position.y = 10;
+                }
+            });
+
+            const time = Date.now() * 0.001;
+            const leftHand = snowman.children.find(child => child.position.x === 1.2);
+            const rightHand = snowman.children.find(child => child.position.x === -1.2);
+
+            if (leftHand && rightHand) {
+                leftHand.rotation.z = Math.PI / 4 + Math.sin(time * 2) * 0.2;
+                rightHand.rotation.z = -Math.PI / 4 + Math.sin(time * 2 + Math.PI) * 0.2;
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+        window.addEventListener('resize', onWindowResize, false);
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+    </script>
+</body>
+</html>
